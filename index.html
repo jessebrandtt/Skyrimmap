@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Skyrim Map</title>
+		<meta charset="utf-8" />
+		<style>
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			#map {
+				width:100%;
+				height:100%;
+				color: #CCC;
+				background: #EFEFEF;
+			}
+			span.loading {
+				display: block;
+				text-align: center;
+				font: 300 italic 72px/400px "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", sans-serif;
+			}
+			@font-face {
+				font-family: cyrodiil;
+				src: url("Cyrodiil Italic.otf");
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="map"><span class="loading">loading tiles...</span></div>
+		<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyBuJk0ZN3yMa6mM8lOX9-Qhn-x1QEfa6tY"></script>
+		<script>
+
+
+				var repeatOnXAxis = false;
+
+
+				function getNormalizedCoord(coord, zoom) {
+					if (!repeatOnXAxis) return coord;
+
+					var y = coord.y;
+					var x = coord.x;
+
+
+					var tileRange = 1 << zoom;
+
+
+					if (y < 0 || y >= tileRange) {
+						return null;
+					}
+
+					if (x < 0 || x >= tileRange) {
+						x = (x % tileRange + tileRange) % tileRange;
+					}
+
+					return {
+						x: x,
+						y: y
+					};
+
+				}
+
+
+
+				window.onload = function() {
+
+
+					var customMapType = new google.maps.ImageMapType({
+						getTileUrl: function(coord, zoom) {
+							var normalizedCoord = getNormalizedCoord(coord, zoom);
+							if(normalizedCoord && (normalizedCoord.x < Math.pow(2, zoom)) && (normalizedCoord.x > -1) && (normalizedCoord.y < Math.pow(2, zoom)) && (normalizedCoord.y > -1)) {
+								return "http://www.pamelafox.org/static/skyrim2/" + zoom + '_' + normalizedCoord.x + '_' + normalizedCoord.y + '.jpg';
+							} else {
+								return 'http://www.pamelafox.org/static/skyrim2/empty.jpg';
+							}
+						},
+						tileSize: new google.maps.Size(256, 256),
+						maxZoom: 5,
+						name: 'PS_Bramus.GoogleMapsTileCutter'
+					});
+
+					var myOptions = {
+						center: new google.maps.LatLng(0, 0),
+						zoom: 2,
+						minZoom: 2,
+                        gestureHandling: 'greedy',
+						daggable: true,
+						streetViewControl: false,
+						panControl: false,
+						scrollwheel: true,
+						mapTypeControl: false,
+						mapTypeControlOptions: {
+							mapTypeIds: ["custom"]
+						}
+					};
+
+
+
+					var map = new google.maps.Map(document.getElementById('map'), myOptions);
+					map.mapTypes.set('custom', customMapType);
+					map.setMapTypeId('custom');
+                    var map_div = document.getElementById('map');
+
+
+
+					var markers = {
+						marks: [{position: ({lat: -4.9, lng: 12.7}), label: 'Whiterun', icon: "Whiterun.png"},
+							{position: ({lat: 20, lng: 78}), label: 'Windhelm', icon: "Windhelm.png"},
+							{position: ({lat: 52, lng: 66}), label: 'Wiinterhold', icon: "Winterhold.png"},
+							{position: ({lat: 55, lng: -44}), label: 'Solitude', icon: "Solitude.png"},
+							{position: ({lat: -56, lng: 109}), label: 'Riften', icon: "Riften.png"},
+							{position: ({lat: 35, lng: -23}), label: 'Morthal', icon: "Morthal.png"},
+							{position: ({lat: 3, lng: -105}), label: 'Markarth', icon: "MarkarthSide.png"},
+							{position: ({lat: -48, lng: -18.5}), label: 'Falkreath', icon: "Falkreath.png"},
+							{position: ({lat: 53.5, lng: 18}), label: 'Dawnstar', icon: "Dawnstar.png"}]
+					}
+
+					map.addListener('zoom_changed', function () {
+						console.log('zoom_changed')
+						if (map.getZoom() == 2) {
+							map.panTo({lat: 0, lng: 0});
+							map.setOptions({draggable: false});
+						} else {
+							map.setOptions({draggable: true});
+						}
+					});
+
+					map_div.addEventListener('wheel', function (event) {
+						if (event.deltaY && event.deltaY < 0) {
+							//scroll up = zoom in;
+							map.setZoom(map.getZoom() + 1);
+						} else {
+							//scroll down zoom out;
+							map.setZoom(map.getZoom() - 1);
+						}
+					});
+
+					for (var i = 0; i < markers.marks.length; i++) {
+						console.log(i)
+						var marker = new google.maps.Marker({
+							position: markers.marks[i].position,
+							map: map,
+							icon: {
+								url: markers.marks[i].icon,
+								labelOrigin: {x: 14, y: 44}
+							},
+							label: {
+								text: markers.marks[i].label,
+								fontFamily: "cyrodiil"
+							}
+
+						});
+					}};
+
+
+		</script>
+
+	</body>
+</html>
